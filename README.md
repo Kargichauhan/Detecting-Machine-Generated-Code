@@ -38,13 +38,13 @@ This repository contains the code for our SemEval-2026 Task 13 system, which add
 
 ## Subtask A: Multi-View Generalization
 
-**Notebook:** `Semeval_A.ipynb`  
+**Notebook:** `Semeval_a.py`  
 **Model:** `microsoft/unixcoder-base`  
 
 
 ## Subtask B: Diagnostic Baseline
 
-**Notebook:** `Semeval_B.ipynb`  
+**Notebook:** `Semeval_b.py`  
 **Model:** `microsoft/codebert-base`  
 
 ## Data

@@ -1,84 +1,168 @@
-# UCSC-NLP at SemEval-2026 Task 13: Multi-Lingual Machine-Generated Code Detection
+# UCSC-NLP at SemEval-2026 Task 13: Multilingual Machine-Generated Code Detection
 
 > **Paper:** *Multi-View Generalization and Diagnostic Analysis of Machine-Generated Code Detection*  
-> **Authors:** Kargi Chauhan\*, Sadiba Nusrat Nur\* (University of California, Santa Cruz)  
-> **Task:** SemEval-2026 Task 13 — Subtask A (binary detection) & Subtask B (multi-class attribution)  
+> **Authors:** Kargi Chauhan\*, Sadiba Nusrat Nur\* — University of California, Santa Cruz  
+> **Task:** SemEval-2026 Task 13 · Subtask A (binary) · Subtask B (multi-class)  
 > \* Equal contribution
-
----
-
-## Overview
-
-This repository contains the code for our SemEval-2026 Task 13 system, which addresses the problem of detecting and attributing machine-generated code. We participate in two subtasks:
-
-- **Subtask A:** Binary classification — human-written vs. machine-generated code, with evaluation under cross-lingual and cross-domain distribution shift.
-- **Subtask B:** Multi-class attribution — assigning code to one of 11 classes (human or one of 10 LLM families), framed as a diagnostic baseline to isolate the effect of severe class imbalance.
 
 ---
 
 ## Results
 
-| Subtask | Split | Accuracy | Macro F1 | AUC |
-|---|---|---|---|---|
-| A (Binary) | Validation | 0.993 | 0.993 | 0.999 |
-| A (Binary) | Test | 0.892 | 0.845 | 0.843 |
-| B (Multi-class) | Validation | 0.884 | 0.086 | — |
-| B (Multi-class) | Test | 0.884 | 0.086 | — |
+| Subtask | System | Split | Accuracy | Macro F1 | Wtd. F1 |
+|---|---|---|---|---|---|
+| A (Binary) | Multi-view UniXcoder | Val | 0.993 | 0.993 | — |
+| A (Binary) | Multi-view UniXcoder | Test | 0.892 | 0.845 | — |
+| B (Multi-class) | Diagnostic baseline | Val | 0.884 | 0.086 | 0.876 |
+| B (Multi-class) | Class-weighted CodeBERT | Val | 0.787 | 0.345 | 0.836 |
 
+---
 
 ## Repository Structure
 
 ```
 .
-├── Semeval_a.py   # Subtask A: UniXcoder multi-view training pipeline
-├── Semeval_b.py               # Subtask B: CodeBERT diagnostic baseline
+├── semeval_task_a.py      # Subtask A — multi-view UniXcoder training (Colab/Kaggle)
+├── semeval_task_b.py      # Subtask B — class-weighted CodeBERT training (Kaggle)
+└── README.md
 ```
 
+Each `.py` file is a direct conversion of the original notebook and can be run as a script or pasted cell-by-cell into a Colab/Kaggle notebook.
+
 ---
-
-## Subtask A: Multi-View Generalization
-
-**Notebook:** `Semeval_a.py`  
-**Model:** `microsoft/unixcoder-base`  
-
-
-## Subtask B: Diagnostic Baseline
-
-**Notebook:** `Semeval_b.py`  
-**Model:** `microsoft/codebert-base`  
 
 ## Data
 
-Data is sourced from the [SemEval-2026 Task 13 competition on Kaggle](https://www.kaggle.com/competitions/sem-eval-2026-task-13-subtask-a) and the DROID resource suite (Orel et al., 2025).
+Data is sourced from the SemEval-2026 Task 13 competition on Kaggle:
 
-- Subtask A data is loaded via `kagglehub` from the Kaggle competition.
-- Subtask B data (`.parquet` files) is loaded from Google Drive.
+- **Subtask A:** [sem-eval-2026-task-13-subtask-a](https://www.kaggle.com/competitions/sem-eval-2026-task-13-subtask-a)
+- **Subtask B:** [sem-eval-2026-task-13-subtask-b](https://www.kaggle.com/competitions/sem-eval-2026-task-13-subtask-b)
+
+Both datasets are in `.parquet` format with `code`, `label`, and `ID` columns.
 
 ---
 
-## Setup
-
-### Requirements
+## Requirements
 
 ```bash
-pip install torch transformers datasets scikit-learn pandas numpy evaluate accelerate
+pip install transformers accelerate datasets evaluate scikit-learn \
+            peft torch pandas numpy matplotlib
 ```
 
-### Running
+Tested with:
+- Python 3.12
+- PyTorch 2.x
+- transformers ≥ 4.40
+- GPU: NVIDIA T4 or A100 (recommended)
 
-1. **Subtask A:** Open `Semeval_a.py` in Kaggle or Colab. Mount Google Drive for checkpoint saving. Run cells in order.
-2. **Subtask B:** Open `Semeval_b.py` in Colab with an A100 GPU. Mount Google Drive with the Task B parquet files at `My Drive/Semeval/`. Run cells in order.
+---
+
+## Subtask A — Multi-View UniXcoder
+
+**File:** `semeval_task_a.py`
+
+### Running on Kaggle
+
+1. Add the Subtask A competition dataset to your notebook
+2. Update `DATA_DIR` at the top of the file:
+   ```python
+   DATA_DIR = "/kaggle/input/sem-eval-2026-task-13-subtask-a/Task_A"
+   ```
+3. Set `CHECKPOINT_DIR` to wherever you want checkpoints saved:
+   ```python
+   CHECKPOINT_DIR = "/kaggle/working/semeval_taskA"
+   ```
+4. Run:
+   ```bash
+   python semeval_task_a.py
+   ```
+
+### Running on Colab
+
+1. Mount Google Drive in a cell:
+   ```python
+   from google.colab import drive
+   drive.mount("/content/drive")
+   ```
+2. Download data via `kagglehub`:
+   ```python
+   import kagglehub
+   kagglehub.login()
+   kagglehub.competition_download("sem-eval-2026-task-13-subtask-a")
+   ```
+3. Leave `DATA_DIR` as the default (it points to the kagglehub cache) or update to your path
+4. Run the script or paste cells into Colab
+
+### Running as a notebook
+
+Paste each numbered section (separated by `# ── N.` comments) into its own notebook cell. The sections map 1:1 to the original notebook cells.
+
+
+## Subtask B — Class-Weighted CodeBERT
+
+**File:** `semeval_task_b.py`
+
+### Running on Kaggle
+
+1. Add the Subtask B competition dataset to your notebook
+2. The data paths are already set for Kaggle — no changes needed:
+   ```python
+   '/kaggle/input/competitions/sem-eval-2026-task-13-subtask-b/Task_B/train.parquet'
+   ```
+3. Run:
+   ```bash
+   python semeval_task_b.py
+   ```
+
+### Running on Colab
+
+Update the three data paths in section 3:
+```python
+train_df = pd.read_parquet('/content/drive/My Drive/Semeval/task_b_training_set.parquet')
+val_df   = pd.read_parquet('/content/drive/My Drive/Semeval/task_b_validation_set.parquet')
+test_df  = pd.read_parquet('/content/drive/My Drive/Semeval/task_b_test_set_sample.parquet')
+```
+And update the output paths in sections 10 and 12 from `/kaggle/working/` to `/content/`.
+
+### Running as a notebook
+
+Paste each numbered section into its own notebook cell. The 12 sections map directly to the original 12 notebook cells.
+
+
+### Expected outputs
+
+- `results_task_b_weighted/` — training checkpoints
+- `codebert_weighted_best/` — best model checkpoint
+- `submission_taskb_weighted.csv` — test set predictions
+
+---
+
+## Reproducing the Paper Results
+
+### Subtask A (0.845 test macro F1)
+
+```bash
+# On Kaggle with T4 GPU 
+python semeval_task_a.py
+```
+
+The 3-view ensemble at inference is automatic. Download `submission.csv` from the working directory and submit to the Kaggle competition.
+
+### Subtask B (0.345 val macro F1)
+
+```bash
+# On Kaggle with T4 GPU 
+python semeval_task_b.py
+```
 
 ---
 
 ## Citation
 
-If you use this work, please cite:
-
 ```bibtex
 @inproceedings{chauhan-nur-2026-ucscnlp,
   title     = {{UCSC-NLP} at {SemEval}-2026 Task 13: Multi-View Generalization and
-               Diagnostic Analysis of Machine-Generated Code Detection},
+               Diagnostic Analysis of Multilingual Machine-Generated Code Detection},
   author    = {Chauhan, Kargi and Nur, Sadiba Nusrat},
   booktitle = {Proceedings of the 20th International Workshop on Semantic Evaluation (SemEval-2026)},
   year      = {2026},
@@ -89,4 +173,6 @@ If you use this work, please cite:
 
 ## License
 
-This code is released for research purposes. See individual model licenses for UniXcoder and CodeBERT at the [Hugging Face model hub](https://huggingface.co/microsoft).
+Released for research purposes. Model weights are subject to their respective licenses on Hugging Face:
+- [microsoft/unixcoder-base](https://huggingface.co/microsoft/unixcoder-base)
+- [microsoft/codebert-base](https://huggingface.co/microsoft/codebert-base)
